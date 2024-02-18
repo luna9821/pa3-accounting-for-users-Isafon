@@ -1,59 +1,3 @@
-/*import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-import org.junit.jupiter.api.Test;
-
-//import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-//import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-
-public class CS_214_Project_Tester {
-
-    @Test
-    public void testReadSongNamesWithInvalidFile() {
-        // Testing if readSongNames returns null for a non-existent file
-        assertNull(CS_214_Project.readSongNames("nonexistent_file.txt"));
-    }
-
-    @Test
-    public void testReadSongNamesWithEmptyLine() throws IOException {
-        // Testing if readSongNames returns null when empty line is encountered in file
-        Files.write(Paths.get("empty_line_test.txt"), List.of("Song1", "", "Song2"));
-        assertNull(CS_214_Project.readSongNames("empty_line_test.txt"));
-        Files.deleteIfExists(Paths.get("empty_line_test.txt"));
-    }
-
-    @Test
-    public void testReadRatingsWithInvalidFile() {
-        // Testing if readRatings returns null for non-existent file
-        assertNull(CS_214_Project.readRatings("nonexistent_file.txt", 3));
-    }
-
-    @Test
-    public void testReadRatingsWithInvalidRating() throws IOException {
-        // Testing if readRatings return null when invalid rating format is found  in the file
-        Files.write(Paths.get("invalid_rating_test.txt"), List.of("1 2 3", "4 x 5"));
-        assertNull(CS_214_Project.readRatings("invalid_rating_test.txt", 3));
-        Files.deleteIfExists(Paths.get("invalid_rating_test.txt"));
-    }
-
-    @Test
-    public void testRemoveUncooperativeUsers() {
-        // Testing if uncooperative users are removed correctly
-        List<List<Integer>> ratings = List.of(
-            List.of(1, 2, 0, 4, 5), // Cooperative user
-            List.of(0, 0, 0, 0, 0),  // Uncooperative user (all 0 ratings)
-            List.of(3, 3, 3, 3, 3)   // Uncooperative user (all same rating)
-        );
-        List<List<Integer>> expected = List.of(List.of(1, 2, 0, 4, 5));
-        assertEquals(expected, CS_214_Project.removeUncooperativeUsers(ratings));
-    }
-
-    
-}*/
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -71,13 +15,13 @@ public class CS_214_Project_Tester {
 
     @Test
     public void testReadSongNamesWithInvalidFile() {
-        // Testing if readSongNames returns null for a non-existent file
+        //Testing if readSongNames returns null for a non-existent file
         assertNull(CS_214_Project.readSongNames("nonexistent_file.txt"));
     }
 
     @Test
     public void testReadSongNamesWithEmptyLine() throws IOException {
-        // Testing if readSongNames returns null when empty line is encountered in file
+        //Testing if readSongNames returns null when empty line is encountered in file
         Files.write(Paths.get("empty_line_test.txt"), List.of("Song1", "", "Song2"));
         assertNull(CS_214_Project.readSongNames("empty_line_test.txt"));
         Files.deleteIfExists(Paths.get("empty_line_test.txt"));
@@ -85,13 +29,13 @@ public class CS_214_Project_Tester {
 
     @Test
     public void testReadRatingsWithInvalidFile() {
-        // Testing if readRatings returns null for non-existent file
+        //Testing if readRatings returns null for non-existent file
         assertNull(CS_214_Project.readRatings("nonexistent_file.txt", 3));
     }
 
     @Test
     public void testReadRatingsWithInvalidRating() throws IOException {
-        // Testing if readRatings return null when invalid rating format is found in the file
+        //Testing if readRatings return null when invalid rating format is found in the file
         Files.write(Paths.get("invalid_rating_test.txt"), List.of("1 2 3", "4 x 5"));
         assertNull(CS_214_Project.readRatings("invalid_rating_test.txt", 3));
         Files.deleteIfExists(Paths.get("invalid_rating_test.txt"));
@@ -99,7 +43,7 @@ public class CS_214_Project_Tester {
 
     @Test
     public void testRemoveUncooperativeUsers() {
-        // Testing if uncooperative users are removed correctly
+        //Testing if uncooperative users are removed correctly
         List<List<Integer>> ratings = List.of(
             List.of(1, 2, 0, 4, 5), // Cooperative user
             List.of(0, 0, 0, 0, 0),  // Uncooperative user (all 0 ratings)
@@ -111,7 +55,7 @@ public class CS_214_Project_Tester {
 
     @Test
     public void testCalculateUserMeans() {
-        // Testing if user means are calculated correctly
+        //Testing if user means are calculated correctly
         List<List<Integer>> ratings = List.of(
             List.of(1, 2, 0, 4, 5),
             List.of(3, 3, 3, 3, 3)
@@ -148,31 +92,29 @@ public class CS_214_Project_Tester {
         List<Integer> userRatings = ratings.get(i);
         double mean = userMeans.get(i);
         
-        // Filter out '0' ratings
+        //Filter out '0' ratings
         List<Integer> filteredRatings = userRatings.stream()
                 .filter(rating -> rating != 0)
                 .collect(Collectors.toList());
         
-        // Calculate deviation only if there are ratings to consider
+        //Calculate deviation only if there are ratings to consider
         if (!filteredRatings.isEmpty()) {
             double deviation = Math.sqrt(filteredRatings.stream()
                     .mapToDouble(rating -> Math.pow(rating - mean, 2))
                     .average()
                     .orElse(Double.NaN));
             
-            // Round deviation to 6 decimal places
+            //Round deviation to 6 decimal places
             deviation = Math.round(deviation * 1e6) / 1e6;
             
             userDeviations.add(deviation);
         } else {
-            userDeviations.add(Double.NaN); // No ratings to consider, deviation is undefined
+            userDeviations.add(Double.NaN); //No ratings to consider, deviation is undefined
         }
     }
     return userDeviations;
 }
 
-
-    // Add more tests for other methods as needed
 }
 
 

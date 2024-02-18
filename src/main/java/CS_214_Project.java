@@ -1,6 +1,4 @@
 
-
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -89,10 +87,10 @@ public class CS_214_Project {
         List<Double> userMeans = calculateUserMeans(filteredRatings);
         List<Double> userDeviations = calculateUserDeviations(filteredRatings, userMeans);
 
-        // Normalize ratings
+        // Normalizing these ratings
         List<List<Double>> normalizedRatings = normalizeRatings(filteredRatings, userMeans, userDeviations);
 
-        // Calculate mean and standard deviation for each song
+        // Calculating mean and standard deviation for each song
         List<Double> songMeans = calculateSongMeans(normalizedRatings);
         List<Double> songDeviations = calculateSongDeviations(normalizedRatings, songMeans);
 
