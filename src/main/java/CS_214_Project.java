@@ -1,161 +1,102 @@
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+
+import java.io.*;
+import java.util.*;
 
 public class CS_214_Project {
-    public static void main(String[] args) {
-        if (args.length != 3) {
-            System.err.println("Error: Incorrect number of arguments. Please provide input file for song titles, input file for ratings, and output file.");
+
+    public static void main(String[] args) throws IOException {
+        if (args.length < 3) {
+            System.out.println("Usage: java CS_214_Project <songs_file> <ratings_file> <output_file>");
             return;
         }
-        // Getting file names from command line arguments
-        String songTitlesFile = args[0];
+
+        String songsFile = args[0];
         String ratingsFile = args[1];
         String outputFile = args[2];
 
-        // Reading song names and ratings from files
-        List<String> songNames = readSongNames(songTitlesFile);
-        List<List<Integer>> ratings = readRatings(ratingsFile, songNames.size());
+        List<String> songs = readSongs(songsFile);
+        List<List<Integer>> ratings = readRatings(ratingsFile);
 
-        // Removing uncooperative users and normalizing ratings
-        List<String> outputLines = processRatings(songNames, ratings);
+        // Identify and remove uncooperative users
+        removeUncooperativeUsers(ratings);
 
-        // Writing the normalized ratings to output file
-        writeOutput(outputFile, outputLines);
+        // Normalize ratings
+        List<List<Double>> normalizedRatings = normalizeRatings(ratings);
+
+        // Calculate song statistics
+        List<SongStatistics> songStats = calculateSongStatistics(songs, normalizedRatings);
+
+        // Write output
+        writeOutput(outputFile, songStats);
     }
 
-    public static List<String> readSongNames(String filename) {
-        List<String> songNames = new ArrayList<>();
-        try (Scanner scanner = new Scanner(new File(filename))) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                if (line.isEmpty()) {
-                    System.err.println("Error: Song File Missing a Title");
-                    return null;
-                }
-                songNames.add(line);
+    static List<String> readSongs(String filename) throws IOException {
+        List<String> songs = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                songs.add(line.trim());
             }
-        } catch (FileNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
-            return null;
         }
-        return songNames;
+        return songs;
     }
 
-    public static List<List<Integer>> readRatings(String filename, int expectedSize) {
+    static List<List<Integer>> readRatings(String filename) throws IOException {
         List<List<Integer>> ratings = new ArrayList<>();
-        try (Scanner scanner = new Scanner(new File(filename))) {
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                String[] parts = line.split(" ");
-                if (parts.length != expectedSize) {
-                    System.err.println("Error: Number of Ratings Mismatch");
-                    return null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                List<Integer> userRatings = new ArrayList<>();
+                for (String rating : line.split("\\s+")) {  // Corrected split using space
+                    userRatings.add(Integer.parseInt(rating));
                 }
-                List<Integer> songRatings = new ArrayList<>();
-                for (String part : parts) {
-                    try {
-                        int rating = Integer.parseInt(part);
-                        if (rating < 0 || rating > 5) {
-                            System.err.println("Error: Invalid Rating Value: " + rating);
-                            return null;
-                        }
-                        songRatings.add(rating);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Invalid Rating Format: " + part);
-                        return null;
-                    }
-                }
-                ratings.add(songRatings);
+                ratings.add(userRatings);
             }
-        } catch (FileNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
-            return null;
         }
         return ratings;
     }
+    
 
-    public static List<String> processRatings(List<String> songNames, List<List<Integer>> ratings) {
-        // Remove uncooperative users
-        List<List<Integer>> filteredRatings = removeUncooperativeUsers(ratings);
-
-        // Calculate mean and standard deviation for each user
-        List<Double> userMeans = calculateUserMeans(filteredRatings);
-        List<Double> userDeviations = calculateUserDeviations(filteredRatings, userMeans);
-
-        // Normalizing these ratings
-        List<List<Double>> normalizedRatings = normalizeRatings(filteredRatings, userMeans, userDeviations);
-
-        // Calculating mean and standard deviation for each song
-        List<Double> songMeans = calculateSongMeans(normalizedRatings);
-        List<Double> songDeviations = calculateSongDeviations(normalizedRatings, songMeans);
-
-        // Prepare output lines
-        List<String> outputLines = new ArrayList<>();
-        for (int i = 0; i < songNames.size(); i++) {
-            String songName = songNames.get(i);
-            double mean = songMeans.get(i);
-            double deviation = songDeviations.get(i);
-            outputLines.add(songName + " " + (Double.isNaN(mean) ? "UNDEFINED" : mean) + " " + (Double.isNaN(deviation) ? "UNDEFINED" : deviation));
-        }
-
-        return outputLines;
-    }
-
-    public static List<List<Integer>> removeUncooperativeUsers(List<List<Integer>> ratings) {
-        List<List<Integer>> filteredRatings = new ArrayList<>();
-        for (List<Integer> userRatings : ratings) {
-            int distinctRatings = (int) userRatings.stream().distinct().count();
-            if (distinctRatings > 1 && !userRatings.stream().allMatch(rating -> rating == 0)) {
-                filteredRatings.add(userRatings);
+    static void removeUncooperativeUsers(List<List<Integer>> ratings) {
+        Iterator<List<Integer>> iterator = ratings.iterator();
+        while (iterator.hasNext()) {
+            List<Integer> userRatings = iterator.next();
+            if (isUncooperative(userRatings)) {
+                iterator.remove();
             }
         }
-        return filteredRatings;
     }
 
-    public static List<Double> calculateUserMeans(List<List<Integer>> ratings) {
-        List<Double> userMeans = new ArrayList<>();
-        for (List<Integer> userRatings : ratings) {
-            double mean = userRatings.stream().mapToInt(Integer::intValue).filter(rating -> rating != 0).average().orElse(Double.NaN);
-            userMeans.add(mean);
-        }
-        return userMeans;
-    }
-
-    public static List<Double> calculateUserDeviations(List<List<Integer>> ratings, List<Double> userMeans) {
-        List<Double> userDeviations = new ArrayList<>();
-        for (int i = 0; i < ratings.size(); i++) {
-            List<Integer> userRatings = ratings.get(i);
-            double mean = userMeans.get(i);
-            double deviation = Math.sqrt(userRatings.stream().mapToDouble(rating -> {
-                if (rating != 0) {
-                    return Math.pow(rating - mean, 2);
-                } else {
-                    return 0;
+    private static boolean isUncooperative(List<Integer> ratings) {
+        int sum = 0;
+        int count = 0;
+        Integer firstRating = null;
+        for (Integer rating : ratings) {
+            if (rating != 0) {
+                sum += rating;
+                count++;
+                if (firstRating == null) {
+                    firstRating = rating;
+                } else if (!firstRating.equals(rating)) {
+                    return false;
                 }
-            }).average().orElse(Double.NaN));
-            userDeviations.add(deviation);
+            }
         }
-        return userDeviations;
+        return count == 0 || sum == firstRating * count;
     }
 
-    public static List<List<Double>> normalizeRatings(List<List<Integer>> ratings, List<Double> userMeans, List<Double> userDeviations) {
+    static List<List<Double>> normalizeRatings(List<List<Integer>> ratings) {
         List<List<Double>> normalizedRatings = new ArrayList<>();
-        for (int i = 0; i < ratings.size(); i++) {
-            List<Integer> userRatings = ratings.get(i);
-            double mean = userMeans.get(i);
-            double deviation = userDeviations.get(i);
+        for (List<Integer> userRatings : ratings) {
+            double mean = calculateMean(userRatings);
+            double stdDev = calculateStandardDeviation(userRatings, mean);
             List<Double> normalizedUserRatings = new ArrayList<>();
-            for (int rating : userRatings) {
-                if (rating != 0) {
-                    double normalizedRating = (rating - mean) / deviation;
-                    normalizedUserRatings.add(normalizedRating);
+            for (Integer rating : userRatings) {
+                if (rating == 0) {
+                    normalizedUserRatings.add(0.0);
                 } else {
-                    normalizedUserRatings.add(Double.NaN);
+                    normalizedUserRatings.add((rating - mean) / stdDev);
                 }
             }
             normalizedRatings.add(normalizedUserRatings);
@@ -163,51 +104,90 @@ public class CS_214_Project {
         return normalizedRatings;
     }
 
-    public static List<Double> calculateSongMeans(List<List<Double>> normalizedRatings) {
-        List<Double> songMeans = new ArrayList<>();
-        for (int i = 0; i < normalizedRatings.get(0).size(); i++) {
-            double sum = 0;
-            int count = 0;
-            for (List<Double> userRatings : normalizedRatings) {
-                double rating = userRatings.get(i);
-                if (!Double.isNaN(rating)) {
-                    sum += rating;
-                    count++;
-                }
+    private static double calculateMean(List<Integer> ratings) {
+        int sum = 0;
+        int count = 0;
+        for (Integer rating : ratings) {
+            if (rating != 0) {
+                sum += rating;
+                count++;
             }
-            double mean = count > 0 ? sum / count : Double.NaN;
-            songMeans.add(mean);
         }
-        return songMeans;
+        return count == 0 ? 0 : (double) sum / count;
     }
 
-    public static List<Double> calculateSongDeviations(List<List<Double>> normalizedRatings, List<Double> songMeans) {
-        List<Double> songDeviations = new ArrayList<>();
-        for (int i = 0; i < normalizedRatings.get(0).size(); i++) {
-            double sumOfSquares = 0;
-            int count = 0;
-            double mean = songMeans.get(i);
-            for (List<Double> userRatings : normalizedRatings) {
-                double rating = userRatings.get(i);
-                if (!Double.isNaN(rating)) {
-                    sumOfSquares += Math.pow(rating - mean, 2);
-                    count++;
-                }
+    private static double calculateStandardDeviation(List<Integer> ratings, double mean) {
+        double sum = 0;
+        int count = 0;
+        for (Integer rating : ratings) {
+            if (rating != 0) {
+                sum += Math.pow(rating - mean, 2);
+                count++;
             }
-            double variance = count > 1 ? sumOfSquares / (count - 1) : Double.NaN;
-            double deviation = !Double.isNaN(variance) ? Math.sqrt(variance) : Double.NaN;
-            songDeviations.add(deviation);
         }
-        return songDeviations;
+        return count < 2 ? 0 : Math.sqrt(sum / (count - 1));
     }
 
-    public static void writeOutput(String filename, List<String> outputLines) {
-        try (PrintWriter writer = new PrintWriter(new File(filename))) {
-            for (String line : outputLines) {
-                writer.println(line);
+    private static List<SongStatistics> calculateSongStatistics(List<String> songs, List<List<Double>> normalizedRatings) {
+        List<SongStatistics> songStats = new ArrayList<>();
+        for (int i = 0; i < songs.size(); i++) {
+            String song = songs.get(i);
+            double mean = calculateMeanForSong(normalizedRatings, i);
+            double stdDev = calculateStandardDeviationForSong(normalizedRatings, mean, i);
+            songStats.add(new SongStatistics(song, mean, stdDev));
+        }
+        return songStats;
+    }
+
+    private static double calculateMeanForSong(List<List<Double>> ratings, int songIndex) {
+        double sum = 0;
+        int count = 0;
+        for (List<Double> userRatings : ratings) {
+            Double rating = userRatings.get(songIndex);
+            if (rating != 0) {
+                sum += rating;
+                count++;
             }
-        } catch (FileNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
+        }
+        return count == 0 ? Double.NaN : sum / count;
+    }
+
+    private static double calculateStandardDeviationForSong(List<List<Double>> ratings, double mean, int songIndex) {
+        double sum = 0;
+        int count = 0;
+        for (List<Double> userRatings : ratings) {
+            Double rating = userRatings.get(songIndex);
+            if (rating != 0) {
+                sum += Math.pow(rating - mean, 2);
+                count++;
+            }
+        }
+        return count < 2 ? Double.NaN : Math.sqrt(sum / (count - 1));
+    }
+
+    private static void writeOutput(String filename, List<SongStatistics> songStats) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            for (SongStatistics stat : songStats) {
+                writer.write(stat.toString());
+                writer.newLine();
+            }
+        }
+    }
+
+    private static class SongStatistics {
+        String song;
+        double mean;
+        double stdDev;
+
+        SongStatistics(String song, double mean, double stdDev) {
+            this.song = song;
+            this.mean = mean;
+            this.stdDev = stdDev;
+        }
+
+        @Override
+        public String toString() {
+            return song + " " + (Double.isNaN(mean) ? "UNDEFINED" : mean) + " " + (Double.isNaN(stdDev) ? "UNDEFINED" : stdDev);
         }
     }
 }
