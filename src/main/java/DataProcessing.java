@@ -58,12 +58,12 @@ public class DataProcessing {
                 if (firstRating == null) {
                     firstRating = rating;
                 } else if (!firstRating.equals(rating)) {
-                    return false; // User has rated at least one song differently
+                    return false; 
                 }
             }
         }
 
-        return !ratedAnySong || firstRating != null; // Uncooperative if never rated any song or rated all songs the same
+        return !ratedAnySong || firstRating != null; 
     }
 
     public List<List<Integer>> getProcessedRatings() {

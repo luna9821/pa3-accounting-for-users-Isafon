@@ -48,7 +48,7 @@ public class CS_214_Project {
             String line;
             while ((line = reader.readLine()) != null) {
                 List<Integer> userRatings = new ArrayList<>();
-                for (String rating : line.split("\\s+")) {  // Corrected split using space
+                for (String rating : line.split("\\s+")) {  
                     userRatings.add(Integer.parseInt(rating));
                 }
                 ratings.add(userRatings);

@@ -17,7 +17,6 @@ import java.io.*;
         
         @BeforeEach
         public void setUp() {
-            // Initialize test data
             testRatings = Arrays.asList(
                 "5 3 0 4",   // Test ratings for song 1
                 "4 0 2 5",   // Test ratings for song 2
@@ -30,26 +29,22 @@ import java.io.*;
     
         @Test
         public void testReadSongs() throws IOException {
-            // Use forward slashes for file paths, or double backslashes (e.g., "test\songs.txt")
             String testSongsFile = "test_songs.txt";
             List<String> expectedSongs = Arrays.asList("Song1", "Song2", "Song3");
-            // Assuming a method to write test data to a file exists
             writeTestDataToFile(testSongsFile, expectedSongs);
-    
             List<String> actualSongs = CS_214_Project.readSongs(testSongsFile);
             assertEquals(expectedSongs, actualSongs);
         }
     
         @Test
         public void testReadRatings() throws IOException {
-            // Use forward slashes for file paths, or double backslashes (e.g., "test\ratings.txt")
             String testRatingsFile = "test_ratings.txt";
             List<List<Integer>> expectedRatings = Arrays.asList(
                 Arrays.asList(1, 2, 3),
                 Arrays.asList(4, 5, 0),
                 Arrays.asList(0, 0, 6)
             );
-            // Assuming a method to write test data to a file exists
+
             writeTestRatingsToFile(testRatingsFile, expectedRatings);
     
             List<List<Integer>> actualRatings = CS_214_Project.readRatings(testRatingsFile);
@@ -97,8 +92,6 @@ import java.io.*;
             assertNotNull(dataProcessing.getProcessedRatings(), "Processed ratings should not be null");
             assertEquals(expected, dataProcessing.getProcessedRatings());
         }
-    
-        // Additional tests for calculating song statistics and writing output can be added here
     
         // Helper methods for test setup
         private void writeTestDataToFile(String filename, List<String> data) throws IOException {
