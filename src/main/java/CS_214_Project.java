@@ -42,6 +42,24 @@ public class CS_214_Project {
         return songs;
     }
 
+    public static List<String> readSongNames(String filename) {
+        List<String> songNames = new ArrayList<>();
+        try (Scanner scanner = new Scanner(new File(filename))) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                if (line.isEmpty()) {
+                    System.err.println("Error: Song File Missing a Title");
+                    return null;
+                }
+                songNames.add(line);
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("Error: " + e.getMessage());
+            return null;
+        }
+        return songNames;
+    }
+
     static List<List<Integer>> readRatings(String filename) throws IOException {
         List<List<Integer>> ratings = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -150,6 +168,40 @@ public class CS_214_Project {
             }
         }
         return count == 0 ? Double.NaN : sum / count;
+    }
+
+    
+    public static List<List<Integer>> readRatings(String filename, int expectedSize) {
+        List<List<Integer>> ratings = new ArrayList<>();
+        try (Scanner scanner = new Scanner(new File(filename))) {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                String[] parts = line.split(" ");
+                if (parts.length != expectedSize) {
+                    System.err.println("Error: Number of Ratings Mismatch");
+                    return null;
+                }
+                List<Integer> songRatings = new ArrayList<>();
+                for (String part : parts) {
+                    try {
+                        int rating = Integer.parseInt(part);
+                        if (rating < 0 || rating > 5) {
+                            System.err.println("Error: Invalid Rating Value: " + rating);
+                            return null;
+                        }
+                        songRatings.add(rating);
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error: Invalid Rating Format: " + part);
+                        return null;
+                    }
+                }
+                ratings.add(songRatings);
+            }
+        } catch (FileNotFoundException e) {
+            System.err.println("Error: " + e.getMessage());
+            return null;
+        }
+        return ratings;
     }
 
     private static double calculateStandardDeviationForSong(List<List<Double>> ratings, double mean, int songIndex) {

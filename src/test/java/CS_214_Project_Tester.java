@@ -5,15 +5,23 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.*;
-    import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
     import java.util.stream.Collectors;
     
     public class CS_214_Project_Tester {
 
         private DataProcessing dataProcessing;
         private List<String> testRatings;
+
+        @Test
+        public void testReadSongNamesWithInvalidFile() {
+            assertNull(CS_214_Project.readSongNames("nonexistent_file.txt"));
+        }
         
         @BeforeEach
         public void setUp() {
@@ -54,12 +62,12 @@ import java.io.*;
         @Test
         public void testRemoveUncooperativeUsers() {
             List<List<Integer>> ratings = new ArrayList<>(Arrays.asList(
-                Arrays.asList(5, 5, 5),
-                Arrays.asList(1, 2, 3),
-                Arrays.asList(0, 0, 0)
+                Arrays.asList(5, 5, 5, 5, 5),
+                Arrays.asList(1, 2, 3, 4, 5),
+                Arrays.asList(0, 0, 0, 0, 0)
             ));
             List<List<Integer>> expectedRatings = Collections.singletonList(
-                Arrays.asList(1, 2, 3)
+                Arrays.asList(1, 2, 3, 4, 5)
             );
     
             CS_214_Project.removeUncooperativeUsers(ratings);
@@ -91,6 +99,25 @@ import java.io.*;
             assertNotNull(dataProcessing, "DataProcessing object should not be null");
             assertNotNull(dataProcessing.getProcessedRatings(), "Processed ratings should not be null");
             assertEquals(expected, dataProcessing.getProcessedRatings());
+        }
+
+        @Test
+        public void testReadSongNamesWithEmptyLine() throws IOException {
+            Files.write(Paths.get("empty_line_test.txt"), List.of("Song1", "", "Song2"));
+            assertNull(CS_214_Project.readSongNames("empty_line_test.txt"));
+            Files.deleteIfExists(Paths.get("empty_line_test.txt"));
+        }
+
+        @Test
+        public void testReadRatingsWithInvalidFile() {
+            assertNull(CS_214_Project.readRatings("nonexistent_file.txt", 3));
+        }
+
+        @Test
+        public void testReadRatingsWithInvalidRating() throws IOException {
+            Files.write(Paths.get("invalid_rating_test.txt"), List.of("1 2 3", "4 x 5"));
+            assertNull(CS_214_Project.readRatings("invalid_rating_test.txt", 3));
+            Files.deleteIfExists(Paths.get("invalid_rating_test.txt"));
         }
     
         // Helper methods for test setup
