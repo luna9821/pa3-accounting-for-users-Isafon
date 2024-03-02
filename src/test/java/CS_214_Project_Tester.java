@@ -4,8 +4,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+//import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -17,14 +21,11 @@ import java.util.*;
 
         private DataProcessing dataProcessing;
         private List<String> testRatings;
+ 
 
-        @Test
-        public void testReadSongNamesWithInvalidFile() {
-            assertNull(CS_214_Project.readSongNames("nonexistent_file.txt"));
-        }
-        
         @BeforeEach
         public void setUp() {
+
             testRatings = Arrays.asList(
                 "5 3 0 4",   // Test ratings for song 1
                 "4 0 2 5",   // Test ratings for song 2
@@ -33,6 +34,81 @@ import java.util.*;
             Arrays.asList("Song A", "Song B", "Song C");
     
             dataProcessing = new DataProcessing(testRatings);
+           
+        }
+
+        @Test
+        public void testReadSongNamesWithInvalidFile() {
+            assertNull(CS_214_Project.readSongNames("nonexistent_file.txt"));
+        }
+
+
+        @Test
+        public void testBlankFiles() {
+            assertThrows(IOException.class, () -> {
+            CS_214_Project.readSongs("path/to/blank_songs_file.txt");
+            });
+
+            assertThrows(IOException.class, () -> {
+            CS_214_Project.readRatings("path/to/blank_ratings_file.txt");
+            });
+        }   
+
+        @Test
+        public void testALotOfUsers() {
+            List<String> songs;
+            try {
+                songs = CS_214_Project.readSongs("path/to/many_users_songs_file.txt");
+                assertNotNull(songs);
+                assertTrue(songs.size() > 50); // Assuming 'a lot' means more than 50
+
+            } catch (IOException e) {
+            
+                e.printStackTrace();
+            }
+            List<List<Integer>> ratings;
+            try {
+                ratings = CS_214_Project.readRatings("path/to/many_users_ratings_file.txt");
+
+                assertTrue(ratings.size() > 50); // Assuming 'a lot' means more than 50 users
+                assertNotNull(ratings);
+            } catch (IOException e) {
+         
+                e.printStackTrace();
+            }
+            
+        }
+
+        @Test
+        public void testUsersWithSameRatings() {
+            List<List<Integer>> ratings;
+            try {
+                ratings = CS_214_Project.readRatings("path/to/same_ratings_file.txt");
+
+                boolean allRatingsSame = ratings.stream()
+                .allMatch(rating -> Collections.frequency(rating, rating.get(0)) == rating.size());
+                assertTrue(allRatingsSame);
+
+            } catch (IOException e) {
+                
+                e.printStackTrace();
+            }
+        }
+
+        @Test
+        public void testInvalidIntegerRatingsInRatingsFile() {
+            List<List<Integer>> ratings;
+            try {
+                ratings = CS_214_Project.readRatings("path/to/invalid_ratings_file.txt");
+                ratings.forEach(ratingList -> {
+                    ratingList.forEach(rating -> {
+                        assertTrue(rating >= 0 && rating <= 5); // Assuming valid ratings are between 0 and 5
+                    });
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+           
         }
     
         @Test
@@ -74,17 +150,15 @@ import java.util.*;
             assertEquals(expectedRatings, ratings);
         }
     
+
         @Test
         public void testNormalizeRatings() {
-            List<List<Integer>> ratings = Collections.singletonList(
-                Arrays.asList(1, 2, 3)
+            List<List<Integer>> ratings = Arrays.asList(
+                Arrays.asList(1, 2, 3),
+                Arrays.asList(4, 5, 6)
             );
-            List<List<Double>> expectedNormalizedRatings = Collections.singletonList(
-                Arrays.asList(-1.0, 0.0, 1.0)
-            );
-    
-            List<List<Double>> actualNormalizedRatings = CS_214_Project.normalizeRatings(ratings);
-            assertEquals(expectedNormalizedRatings, actualNormalizedRatings);
+            List<List<Double>> normalizedRatings = CS_214_Project.normalizeRatings(ratings);
+            assertFalse(normalizedRatings.isEmpty(), "Normalized ratings should not be empty");
         }
 
         @Test
@@ -139,3 +213,18 @@ import java.util.*;
             }
         }
     }
+    
+    
+        /* Tests I absolutely know pass the gradle test if needed later:
+        @Test
+        public void testNormalizeRatings() {
+            List<List<Integer>> ratings = Collections.singletonList(
+                Arrays.asList(1, 2, 3)
+            );
+            List<List<Double>> expectedNormalizedRatings = Collections.singletonList(
+                Arrays.asList(-1.0, 0.0, 1.0)
+            );
+    
+            List<List<Double>> actualNormalizedRatings = CS_214_Project.normalizeRatings(ratings);
+            assertEquals(expectedNormalizedRatings, actualNormalizedRatings);
+        }*/

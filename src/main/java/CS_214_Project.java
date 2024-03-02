@@ -85,24 +85,19 @@ public class CS_214_Project {
             }
         }
     }
-
+    
     private static boolean isUncooperative(List<Integer> ratings) {
-        int sum = 0;
-        int count = 0;
-        Integer firstRating = null;
-        for (Integer rating : ratings) {
-            if (rating != 0) {
-                sum += rating;
-                count++;
-                if (firstRating == null) {
-                    firstRating = rating;
-                } else if (!firstRating.equals(rating)) {
-                    return false;
-                }
-            }
+        // Check if user rated at least one song
+        boolean ratedAtLeastOneSong = ratings.stream().anyMatch(rating -> rating != 0);
+        if (!ratedAtLeastOneSong) {
+            return true; // Uncooperative if no songs are rated
         }
-        return count == 0 || sum == firstRating * count;
+    
+        // Check if user has rated all songs the same
+        long distinctRatings = ratings.stream().filter(rating -> rating != 0).distinct().count();
+        return distinctRatings <= 1;
     }
+    
 
     static List<List<Double>> normalizeRatings(List<List<Integer>> ratings) {
         List<List<Double>> normalizedRatings = new ArrayList<>();
@@ -216,6 +211,7 @@ public class CS_214_Project {
         }
         return count < 2 ? Double.NaN : Math.sqrt(sum / (count - 1));
     }
+
 
     private static void writeOutput(String filename, List<SongStatistics> songStats) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
