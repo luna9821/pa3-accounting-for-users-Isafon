@@ -40,19 +40,23 @@ public class CS_214_Project_Tester {
            
         }
 
-    @Test
-    public void testReadSongNamesWithInvalidFile() {
-        //Testing if readSongNames returns null for a non-existent file
-        assertNull(CS_214_Project.readSongNames("nonexistent_file.txt"));
-    }
+        @Test
+        public void testReadSongNamesWithInvalidFile() {
+            assertThrows(IOException.class, () -> {
+                CS_214_Project.readSongNames("nonexistent_file.txt");
+            });
+        }
+        
 
     @Test
     public void testReadSongNamesWithEmptyLine() throws IOException {
-        //Testing if readSongNames returns null when empty line is encountered in file
         Files.write(Paths.get("empty_line_test.txt"), List.of("Song1", "", "Song2"));
-        assertNull(CS_214_Project.readSongNames("empty_line_test.txt"));
+        assertThrows(IOException.class, () -> {
+            CS_214_Project.readSongNames("empty_line_test.txt");
+        });
         Files.deleteIfExists(Paths.get("empty_line_test.txt"));
     }
+    
 
     @Test
     public void testReadRatingsWithInvalidFile() {
@@ -62,11 +66,13 @@ public class CS_214_Project_Tester {
 
     @Test
     public void testReadRatingsWithInvalidRating() throws IOException {
-        //Testing if readRatings return null when invalid rating format is found in the file
         Files.write(Paths.get("invalid_rating_test.txt"), List.of("1 2 3", "4 x 5"));
-        assertNull(CS_214_Project.readRatings("invalid_rating_test.txt", 3));
+        assertThrows(IllegalArgumentException.class, () -> {
+            CS_214_Project.readRatings("invalid_rating_test.txt", 3);
+        });
         Files.deleteIfExists(Paths.get("invalid_rating_test.txt"));
     }
+    
 
     @Test
     public void testRemoveUncooperativeUsers() {
@@ -152,7 +158,7 @@ public class CS_214_Project_Tester {
                 assertNotNull(ratings);
             } catch (IOException e) {
          
-                e.printStackTrace();
+                System.err.println("Error: IO Exception");
             }
             
         }
@@ -169,7 +175,7 @@ public class CS_214_Project_Tester {
 
             } catch (IOException e) {
                 
-                e.printStackTrace();
+                System.err.println("Error: IO Exception");
             }
         }
 
@@ -184,7 +190,7 @@ public class CS_214_Project_Tester {
                     });
                 });
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error: IO Exception");
             }
            
         }
@@ -263,9 +269,6 @@ public class CS_214_Project_Tester {
             }
         }
     }
-
-
-
  
         /* Tests I absolutely know pass the gradle test if needed later:
         @Test

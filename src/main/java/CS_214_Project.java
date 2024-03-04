@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class CS_214_Project {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
             if (args.length != 3) {
                 System.err.println("Error: Incorrect number of arguments. Please provide input file for song titles, input file for ratings, and output file.");
                 System.exit(1); // Exit with error code 1 for incorrect arguments
@@ -48,27 +48,32 @@ public class CS_214_Project {
         return songs;
     }
 
-    public static List<String> readSongNames(String filename) {
+    public static List<String> readSongNames(String filename) throws IOException {
         List<String> songNames = new ArrayList<>();
         try (Scanner scanner = new Scanner(new File(filename))) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 if (line.isEmpty()) {
-                    System.err.println("Error: Song File Missing a Title");
-                    return null;
+                    throw new IOException("Error: Empty line found in song names file.");
                 }
                 songNames.add(line);
             }
         } catch (FileNotFoundException e) {
-            System.err.println("Error: " + e.getMessage());
-            return null;
+            throw new IOException("Error: File not found: " + e.getMessage());
         }
         return songNames;
     }
+    
 
     public static List<List<Integer>> readRatings(String filename, int expectedSize) {
+        File file = new File(filename);
+        if (!file.exists()) {
+            System.err.println("Error: File not found - " + filename);
+            return null;
+        }
+    
         List<List<Integer>> ratings = new ArrayList<>();
-        try (Scanner scanner = new Scanner(new File(filename))) {
+        try (Scanner scanner = new Scanner(file)) {
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 String[] parts = line.split(" ");
@@ -81,14 +86,12 @@ public class CS_214_Project {
                     try {
                         int rating = Integer.parseInt(part);
                         if (rating < 0 || rating > 5) {
-                            System.err.println("Error: Invalid Rating Value: " + rating);
-                            return null;
+                            throw new IllegalArgumentException("Error: Invalid rating value: " + rating);
                         }
                         songRatings.add(rating);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Invalid Rating Format: " + part);
-                        return null;
-                    }
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException("Error: Invalid rating format: " + part);
+                        }
                 }
                 ratings.add(songRatings);
             }
@@ -98,7 +101,7 @@ public class CS_214_Project {
         }
         return ratings;
     }
-
+    
     public static List<List<Integer>> readRatings(String filename) throws IOException {
         List<List<Integer>> ratings = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -144,8 +147,9 @@ public class CS_214_Project {
     public static List<List<Integer>> removeUncooperativeUsers(List<List<Integer>> ratings) {
         List<List<Integer>> filteredRatings = new ArrayList<>();
         for (List<Integer> userRatings : ratings) {
-            int distinctRatings = (int) userRatings.stream().distinct().count();
-            if (distinctRatings > 1 && !userRatings.stream().allMatch(rating -> rating == 0)) {
+            boolean hasDistinctRatings = userRatings.stream().distinct().count() > 1;
+            boolean allZeros = userRatings.stream().allMatch(rating -> rating == 0);
+            if (hasDistinctRatings && !allZeros) {
                 filteredRatings.add(userRatings);
             }
         }
@@ -155,11 +159,19 @@ public class CS_214_Project {
     public static List<Double> calculateUserMeans(List<List<Integer>> ratings) {
         List<Double> userMeans = new ArrayList<>();
         for (List<Integer> userRatings : ratings) {
-            double mean = userRatings.stream().mapToInt(Integer::intValue).filter(rating -> rating != 0).average().orElse(Double.NaN);
-            userMeans.add(mean);
+            double sum = 0;
+            int count = 0;
+            for (Integer rating : userRatings) {
+                if (rating != 0) {
+                    sum += rating;
+                    count++;
+                }
+            }
+            userMeans.add(count > 0 ? sum / count : Double.NaN);
         }
         return userMeans;
     }
+    
 
     public static List<Double> calculateUserDeviations(List<List<Integer>> ratings, List<Double> userMeans) {
         List<Double> userDeviations = new ArrayList<>();
