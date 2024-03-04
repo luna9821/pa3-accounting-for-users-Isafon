@@ -11,7 +11,7 @@ class OutputGeneration {
         List<String> outputLines = IntStream.range(0, songTitles.size())
             .mapToObj(i -> formatSongOutput(songTitles.get(i), normalizedMeans.get(i), normalizedStdDevs.get(i)))
             .collect(Collectors.toList());
-
+    
         Files.write(Paths.get(outputFile), outputLines, StandardOpenOption.CREATE);
     }
 

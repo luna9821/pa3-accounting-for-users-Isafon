@@ -30,46 +30,40 @@ public class DataProcessing {
 
     public void removeUncooperativeUsers() {
         List<Integer> uncooperativeUsers = new ArrayList<>();
-
-        // Assuming ratingsMatrix is not null and properly initialized
+    
         int numUsers = ratingsMatrix.get(0).size();
         for (int userIndex = 0; userIndex < numUsers; userIndex++) {
-            boolean isUncooperative = checkIfUserIsUncooperative(userIndex);
-            if (isUncooperative) {
+            if (isUncooperativeUser(userIndex)) {
                 uncooperativeUsers.add(userIndex);
             }
         }
-
-        // Removing uncooperative users
+    
         for (List<Integer> songRatings : ratingsMatrix) {
-            uncooperativeUsers.forEach(userIndex -> songRatings.set(userIndex, null));
-        }
-        ratingsMatrix.forEach(songRatings -> songRatings.removeIf(rating -> rating == null));
-    }
-
-    private boolean checkIfUserIsUncooperative(int userIndex) {
-        Integer firstRating = null;
-        boolean ratedAnySong = false;
-
-        for (List<Integer> songRatings : ratingsMatrix) {
-            Integer rating = songRatings.get(userIndex);
-            if (rating != 0) {
-                ratedAnySong = true;
-                if (firstRating == null) {
-                    firstRating = rating;
-                } else if (!firstRating.equals(rating)) {
-                    return false; 
-                }
+            for (int userIndex = uncooperativeUsers.size() - 1; userIndex >= 0; userIndex--) {
+                songRatings.remove((int) uncooperativeUsers.get(userIndex));
             }
         }
-
-        return !ratedAnySong || firstRating != null; 
     }
 
+    private boolean isUncooperativeUser(int userIndex) {
+        boolean hasRated = false;
+        Integer firstRating = null;
+    
+        for (List<Integer> songRatings : ratingsMatrix) {
+            int rating = songRatings.get(userIndex);
+            if (rating != 0) {
+                if (firstRating == null) {
+                    firstRating = rating;
+                } else if (rating != firstRating) {
+                    return false;
+                }
+                hasRated = true;
+            }
+        }
+        return !hasRated || (firstRating != null && hasRated);
+    }
+    
     public List<List<Integer>> getProcessedRatings() {
         return ratingsMatrix;
     }
 }
-
-
-

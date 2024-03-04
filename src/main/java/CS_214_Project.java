@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class CS_214_Project {
     public static void main(String[] args) throws IOException {
@@ -36,6 +38,72 @@ public class CS_214_Project {
     
             System.exit(0); // Successful completion
         }
+
+        public static List<List<Integer>> removeUncooperativeUsers(List<List<Integer>> ratings) {
+            List<List<Integer>> filteredRatings = new ArrayList<>();
+            for (List<Integer> userRatings : ratings) {
+                boolean hasDistinctRatings = userRatings.stream().distinct().count() > 1;
+                boolean allZeros = userRatings.stream().allMatch(rating -> rating == 0);
+                if (hasDistinctRatings && !allZeros) {
+                    filteredRatings.add(userRatings);
+                }
+            }
+            return filteredRatings;
+        }
+
+        public static List<List<Integer>> processRatingsAndRemoveUncooperativeUsers(List<List<Integer>> songRatings) {
+        // Transpose ratings to be user-centric
+        List<List<Integer>> userRatings = transposeRatings(songRatings);
+
+        // Identify uncooperative users
+        Set<Integer> uncooperativeUsers = new HashSet<>();
+        for (int i = 0; i < userRatings.size(); i++) {
+            if (isUncooperativeUser(userRatings.get(i))) {
+                uncooperativeUsers.add(i);
+            }
+        }
+
+        // Remove ratings of uncooperative users
+        for (List<Integer> ratings : songRatings) {
+            for (int i = uncooperativeUsers.size() - 1; i >= 0; i--) {
+                ratings.remove((int) uncooperativeUsers.toArray()[i]);
+            }
+        }
+
+        return songRatings;
+    }
+
+    private static List<List<Integer>> transposeRatings(List<List<Integer>> songRatings) {
+        List<List<Integer>> transposed = new ArrayList<>();
+        if (!songRatings.isEmpty()) {
+            int numUsers = songRatings.get(0).size();
+            for (int i = 0; i < numUsers; i++) {
+                List<Integer> userRating = new ArrayList<>();
+                for (List<Integer> ratings : songRatings) {
+                    userRating.add(ratings.get(i));
+                }
+                transposed.add(userRating);
+            }
+        }
+        return transposed;
+    }
+
+    private static boolean isUncooperativeUser(List<Integer> userRatings) {
+        boolean allZeros = true;
+        Integer firstRating = null;
+        for (int rating : userRatings) {
+            if (rating != 0) {
+                allZeros = false;
+                if (firstRating == null) {
+                    firstRating = rating;
+                } else if (!firstRating.equals(rating)) {
+                    return false;
+                }
+            }
+        }
+        return allZeros || firstRating != null;
+    }
+
 
         public static List<String> readSongs(String filename) throws IOException {
         List<String> songs = new ArrayList<>();
@@ -144,17 +212,6 @@ public class CS_214_Project {
         return outputLines;
     }
 
-    public static List<List<Integer>> removeUncooperativeUsers(List<List<Integer>> ratings) {
-        List<List<Integer>> filteredRatings = new ArrayList<>();
-        for (List<Integer> userRatings : ratings) {
-            boolean hasDistinctRatings = userRatings.stream().distinct().count() > 1;
-            boolean allZeros = userRatings.stream().allMatch(rating -> rating == 0);
-            if (hasDistinctRatings && !allZeros) {
-                filteredRatings.add(userRatings);
-            }
-        }
-        return filteredRatings;
-    }
 
     public static List<Double> calculateUserMeans(List<List<Integer>> ratings) {
         List<Double> userMeans = new ArrayList<>();
